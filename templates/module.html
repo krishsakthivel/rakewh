@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ module.title }} - rake{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="mod-header">
+    <a class="back-btn" href="{{ url_for('courses.view', course_id=course.id) }}">back to course</a>
+    <div class="mod-num-label">module {{ module.order }}</div>
+    <div class="mod-big-title">{{ module.title }}</div>
+    <div class="stage-tabs">
+      <a class="stab active" href="{{ url_for('modules.view', module_id=module.id) }}">read</a>
+      <a class="stab" href="{{ url_for('quiz.view', module_id=module.id) }}">quiz</a>
+      <a class="stab {% if completed %}done{% endif %}" href="{{ url_for('teach.view', module_id=module.id) }}">teach pip</a>
+    </div>
+  </div>
+
+  <div class="read-body">
+    {{ module.explanation | safe }}
+  </div>
+
+  <div class="chips">
+    {% for concept in module.key_concepts %}
+      <span class="chip">{{ concept }}</span>
+    {% endfor %}
+  </div>
+
+  <div style="margin-top:24px;">
+    <a class="btn-primary" href="{{ url_for('quiz.view', module_id=module.id) }}">okay I read it, quiz me</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}rake{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <div class="logo" onclick="window.location='{{ url_for('auth.index') }}'"><div class="logo-wordmark">rake<span>.</span></div><div class="logo-tagline"><span class="logo-tagline-green">learning</span> by teaching</div></div>
+  <div class="nav-links">
+    {% if current_user.is_authenticated %}
+      <a class="navl" href="{{ url_for('dashboard.home') }}">my courses</a>
+      <a class="navl" href="{{ url_for('courses.upload') }}">upload PDF</a>
+    {% else %}
+      <a class="navl" href="{{ url_for('auth.index') }}">home</a>
+      <a class="navl" href="#how">how it works</a>
+    {% endif %}
+  </div>
+  <div class="nav-right">
+    {% if current_user.is_authenticated %}
+      <span class="nav-name">{{ current_user.name }}</span>
+      <a class="btn-signin" href="{{ url_for('auth.logout') }}">sign out</a>
+    {% else %}
+      <a class="btn-signin" href="{{ url_for('auth.login') }}">sign in</a>
+      <a class="btn-nav-cta" href="{{ url_for('auth.signup') }}">join for free</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-wrap">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

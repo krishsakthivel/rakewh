@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}upload your PDF - rake{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="pg-breadcrumb">
+    <a href="{{ url_for('dashboard.home') }}">my courses</a> / upload PDF
+  </div>
+
+  <div class="upload-page-header">
+    <h1>okay drop the PDF, we'll handle it from here</h1>
+    <p>rake reads your notes and generates a full course with explanations, quizzes, and a teach session for every concept. no effort required from you besides uploading.</p>
+  </div>
+
+  <div id="size-warning" style="display:none; margin-bottom:16px; max-width:640px; margin-left:auto; margin-right:auto;">
+    <div style="padding:14px 18px;border-radius:6px;font-size:13px;font-weight:500;background:#fdf0ee;color:var(--red);border:1px solid var(--red);">that file is too big. keep it under 1.5MB (roughly 20-25 pages). try uploading just the chapters you actually need to study.</div>
+  </div>
+
+  <div id="upload-section">
+    <form method="POST" action="{{ url_for('courses.upload') }}" enctype="multipart/form-data" id="upload-form">
+      <div class="upload-zone" id="uz">
+        <input type="file" name="pdf" id="fi" accept=".pdf" onchange="handleFile(event)">
+        <div class="uz-title">drag and drop your PDF here</div>
+        <div class="uz-sub">or click if you are not feeling the drag and drop energy</div>
+        <div class="uz-limit">max 1.5MB — upload just the chapters you are actually studying</div>
+        <button type="button" class="uz-btn" onclick="document.getElementById('fi').click()">choose a file</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="processing" id="proc" style="display:none; max-width:600px; margin:20px auto 0;">
+    <div class="proc-bar-wrap"><div class="proc-bar" id="pbar"></div></div>
+    <div class="proc-step active" id="ps1"><div class="pind active" id="pi1">1</div>reading your PDF, pulling out all the good stuff</div>
+    <div class="proc-step" id="ps2"><div class="pind" id="pi2">2</div>chopping it into concept modules, chef behavior</div>
+    <div class="proc-step" id="ps3"><div class="pind" id="pi3">3</div>writing quiz questions designed to catch you lacking</div>
+    <div class="proc-step" id="ps4"><div class="pind" id="pi4">4</div>building the secret rubric Pip uses to check if you really know it</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MAX_BYTES = 1.5 * 1024 * 1024;
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > MAX_BYTES) {
+    document.getElementById('size-warning').style.display = 'block';
+    document.getElementById('fi').value = '';
+    return;
+  }
+
+  document.getElementById('size-warning').style.display = 'none';
+  document.getElementById('upload-section').querySelector('.upload-zone').style.opacity = '0.4';
+  document.getElementById('proc').style.display = 'block';
+
+  const widths = [25, 50, 75, 95];
+  [1, 2, 3, 4].forEach((n, i) => {
+    setTimeout(() => {
+      document.getElementById('pbar').style.width = widths[i] + '%';
+      const pi = document.getElementById('pi' + n);
+      const ps = document.getElementById('ps' + n);
+      pi.classList.add('active');
+      ps.classList.add('active');
+      if (i > 0) {
+        const pp = document.getElementById('pi' + (n - 1));
+        const pps = document.getElementById('ps' + (n - 1));
+        pp.classList.remove('active');
+        pp.classList.add('done');
+        pp.textContent = '✓';
+        pps.classList.remove('active');
+        pps.classList.add('done');
+      }
+    }, i * 800);
+  });
+
+  setTimeout(() => {
+    document.getElementById('upload-form').submit();
+  }, 500);
+}
+
+const uz = document.getElementById('uz');
+uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('drag'); });
+uz.addEventListener('dragleave', () => uz.classList.remove('drag'));
+uz.addEventListener('drop', e => {
+  e.preventDefault();
+  uz.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f) {
+    document.getElementById('fi').files = e.dataTransfer.files;
+    handleFile({ target: { files: [f] } });
+  }
+});
+</script>
+{% endblock %}

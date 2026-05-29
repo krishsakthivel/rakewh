@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}teach pip - {{ module.title }} - rake{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="mod-header">
+    <a class="back-btn" href="{{ url_for('quiz.view', module_id=module.id) }}">back to quiz</a>
+    <div class="mod-num-label">module {{ module.order }} - teach pip</div>
+    <div class="mod-big-title">{{ module.title }}</div>
+    <div class="stage-tabs">
+      <a class="stab done" href="{{ url_for('modules.view', module_id=module.id) }}">read</a>
+      <a class="stab done" href="{{ url_for('quiz.view', module_id=module.id) }}">quiz</a>
+      <a class="stab active" href="{{ url_for('teach.view', module_id=module.id) }}">teach pip</a>
+    </div>
+  </div>
+
+  <div class="pip-intro">
+    <div class="pip-av">P</div>
+    <div>
+      <div class="pip-name">Pip</div>
+      <div class="pip-role">certified clueless, eager to learn, will not let you off easy</div>
+      <div class="pip-msg">hey! I heard you have been studying {{ module.title }} and honestly I have no idea what that even means. can you break it down for me like I am five? start wherever.</div>
+    </div>
+  </div>
+
+  <div class="chat-thread" id="ct">
+    {% if session.transcript %}
+      {% for turn in session.transcript %}
+      <div class="cmsg {{ 'user' if turn.role == 'user' else 'pip' }}">
+        <div class="cav {{ 'u' if turn.role == 'user' else 'p' }}">{{ 'Y' if turn.role == 'user' else 'P' }}</div>
+        <div class="cbubble">{{ turn.content }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="cmsg pip">
+        <div class="cav p">P</div>
+        <div class="cbubble">okay so what even is {{ module.title | lower }}?? I have genuinely never heard of this before in my life.</div>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if not session.passed %}
+  <div class="ci-row">
+    <textarea class="ci" id="ci" placeholder="explain it to Pip like they are brand new to this..." onkeydown="ck(event)"></textarea>
+    <button class="send-btn" onclick="sc()">send it</button>
+  </div>
+  {% else %}
+  <div class="pass-banner">
+    <div class="pass-title">Pip gets it now. you ate and left no crumbs.</div>
+    <a class="btn-primary" href="{{ url_for('courses.view', course_id=course.id) }}">back to the course</a>
+  </div>
+  {% endif %}
+
+  <div class="rubric-box">
+    <div class="rubric-hdr">
+      <span class="rubric-hdr-title">concept coverage</span>
+      <span class="rubric-pct" id="rp">
+        {% if session.rubric_coverage %}
+          {{ session.rubric_coverage.values() | list | select | list | length }} of {{ session.rubric_coverage | length }} covered
+        {% else %}
+          nothing covered yet, get to explaining
+        {% endif %}
+      </span>
+    </div>
+    {% set rubric = module.teaching_rubric %}
+    {% set coverage = session.rubric_coverage or {} %}
+    {% for concept in rubric.get('required_concepts', []) %}
+    <div class="rrow {{ 'hit' if coverage.get(concept) else '' }}" id="rc-{{ loop.index }}">
+      <div class="rcheck {{ 'hit' if coverage.get(concept) else '' }}">{{ '✓' if coverage.get(concept) else '' }}</div>
+      <span>{{ concept }}</span>
+    </div>
+    {% endfor %}
+    {% for rel in rubric.get('required_relationships', []) %}
+    <div class="rrow {{ 'hit' if coverage.get(rel) else '' }}" id="rr-{{ loop.index }}">
+      <div class="rcheck {{ 'hit' if coverage.get(rel) else '' }}">{{ '✓' if coverage.get(rel) else '' }}</div>
+      <span>{{ rel }}</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SESSION_ID = {{ session.id }};
+
+async function sc() {
+  const inp = document.getElementById('ci');
+  const text = inp.value.trim();
+  if (!text) return;
+
+  const thread = document.getElementById('ct');
+  const um = document.createElement('div');
+  um.className = 'cmsg user';
+  um.innerHTML = '<div class="cav u">Y</div><div class="cbubble">' + escHtml(text) + '</div>';
+  thread.appendChild(um);
+  inp.value = '';
+  thread.scrollTop = thread.scrollHeight;
+
+  const loadMsg = document.createElement('div');
+  loadMsg.className = 'cmsg pip';
+  loadMsg.id = 'pip-loading';
+  loadMsg.innerHTML = '<div class="cav p">P</div><div class="cbubble" style="color:var(--gray2)">Pip is thinking...</div>';
+  thread.appendChild(loadMsg);
+  thread.scrollTop = thread.scrollHeight;
+
+  try {
+    const res = await fetch('/api/teach/' + SESSION_ID + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text }),
+    });
+    const data = await res.json();
+
+    document.getElementById('pip-loading').remove();
+
+    const pm = document.createElement('div');
+    pm.className = 'cmsg pip';
+    pm.innerHTML = '<div class="cav p">P</div><div class="cbubble">' + escHtml(data.pip_reply) + '</div>';
+    thread.appendChild(pm);
+    thread.scrollTop = thread.scrollHeight;
+
+    if (data.rubric_coverage) updateRubric(data.rubric_coverage, data.coverage_score);
+
+    if (data.passed) {
+      document.querySelector('.ci-row').innerHTML = '<div class="pass-banner"><div class="pass-title">pip unlocked his braincell he never had, nice one!</div><a class="btn-primary" href="/courses/{{ course.id }}">back to the course</a></div>';
+    }
+  } catch (err) {
+    document.getElementById('pip-loading')?.remove();
+  }
+}
+
+function updateRubric(coverage, score) {
+  const pct = document.getElementById('rp');
+  const covered = Object.values(coverage).filter(Boolean).length;
+  const total = Object.keys(coverage).length;
+  if (pct) pct.textContent = covered + ' of ' + total + ' covered';
+
+  document.querySelectorAll('.rrow').forEach(row => {
+    const conceptSpan = row.querySelector('span');
+    if (!conceptSpan) return;
+    const concept = conceptSpan.textContent.trim();
+    if (coverage[concept]) {
+      row.classList.add('hit');
+      const check = row.querySelector('.rcheck');
+      if (check) { check.classList.add('hit'); check.textContent = '✓'; }
+    }
+  });
+}
+
+function escHtml(text) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(text));
+  return d.innerHTML;
+}
+
+function ck(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sc(); } }
+
+const thread = document.getElementById('ct');
+if (thread) thread.scrollTop = thread.scrollHeight;
+</script>
+{% endblock %}

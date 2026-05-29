@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} - rake{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="shared-preview">
+    <div class="shared-eyebrow">someone dropped this for u</div>
+    <h1>{{ course.title }}</h1>
+    <p>{{ course.description }}</p>
+    <div class="shared-meta">
+      <span class="ch-pill">{{ course.modules | length }} modules</span>
+    </div>
+    <img src="https://media.tenor.com/YardF3HKXFUAAAAC/study-lets-go.gif" alt="let's go" style="width:160px;border-radius:8px;margin:16px 0;display:block;">
+    <div class="shared-modules">
+      {% for module in course.modules %}
+      <div class="shared-module-row">
+        <div class="mod-n">{{ '%02d' % loop.index }}</div>
+        <div>
+          <div class="mod-title">{{ module.title }}</div>
+          <div class="mod-concepts">{{ module.key_concepts | join(', ') }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="shared-cta">
+      <p>make a free account and start.</p>
+      <a class="btn-primary" href="{{ url_for('auth.signup') }}">sign up and get into it</a>
+      <a class="btn-secondary" href="{{ url_for('auth.login') }}">already have an account</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

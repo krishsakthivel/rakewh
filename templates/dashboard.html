@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}my courses - rake{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1>your courses</h1>
+      <p class="page-sub">everything you have built and enrolled in, all in one place</p>
+    </div>
+    <a class="btn-primary" href="{{ url_for('courses.upload') }}">drop a new PDF</a>
+  </div>
+
+  {% if my_courses %}
+    <div class="section-label">courses you cooked up</div>
+    <div class="course-grid">
+      {% for course in my_courses %}
+      <a class="course-card" href="{{ url_for('courses.view', course_id=course.id) }}">
+        <div class="course-card-title">{{ course.title }}</div>
+        <div class="course-card-meta">{{ course.modules | length }} modules</div>
+        <div class="course-card-desc">{{ course.description }}</div>
+        <div class="course-card-footer">
+          <span class="share-token">rakewh.onrender.com/c/{{ course.share_token }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <img src="https://media1.tenor.com/m/SBTlv9qozLgAAAAC/spongebob-waiting.gif" alt="waiting" style="width:140px;border-radius:8px;margin-bottom:16px;">
+      <h3>nothing here yet</h3>
+      <p>upload a PDF and rake will build your first course. </p>
+      <a class="btn-primary" href="{{ url_for('courses.upload') }}">upload a PDF</a>
+    </div>
+  {% endif %}
+
+  {% if enrolled_courses %}
+    <div class="section-label" style="margin-top:40px">dropped by someone else</div>
+    <div class="course-grid">
+      {% for course in enrolled_courses %}
+      <a class="course-card" href="{{ url_for('courses.view', course_id=course.id) }}">
+        <div class="course-card-title">{{ course.title }}</div>
+        <div class="course-card-meta">{{ course.modules | length }} modules</div>
+        <div class="course-card-desc">{{ course.description }}</div>
+      </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

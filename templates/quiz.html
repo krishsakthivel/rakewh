@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}quiz time - {{ module.title }} - rake{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="mod-header">
+    <a class="back-btn" href="{{ url_for('modules.view', module_id=module.id) }}">back to the reading</a>
+    <div class="mod-num-label">module {{ module.order }} - quiz</div>
+    <div class="mod-big-title">{{ module.title }}</div>
+    <div class="stage-tabs">
+      <a class="stab done" href="{{ url_for('modules.view', module_id=module.id) }}">read</a>
+      <a class="stab active" href="{{ url_for('quiz.view', module_id=module.id) }}">quiz</a>
+      <a class="stab" href="{{ url_for('teach.view', module_id=module.id) }}">teach pip</a>
+    </div>
+  </div>
+
+  <div id="quiz-container">
+    <div class="quiz-prog" id="quiz-prog">
+      {% for q in questions %}
+        <div class="qp {% if loop.first %}cur{% endif %}" id="qpip-{{ loop.index0 }}"></div>
+      {% endfor %}
+    </div>
+
+    {% for question in questions %}
+    {% set slide_idx = loop.index0 %}
+    <div class="quiz-slide" id="slide-{{ slide_idx }}" style="display: {% if loop.first %}block{% else %}none{% endif %}">
+      <div class="quiz-q">{{ question.text }}</div>
+      <div class="quiz-opts">
+        {% for option in question.options %}
+        <button class="qopt"
+          data-question-id="{{ question.id }}"
+          data-option-index="{{ loop.index0 }}"
+          data-slide-index="{{ slide_idx }}"
+          onclick="answerQuestion(this, {{ slide_idx }}, {{ loop.index0 }}, {{ question.correct_index }}, '{{ question.explanation | replace("'", "\\'") | replace('"', '&quot;') | replace('\n', ' ') }}')">
+          {{ option }}
+        </button>
+        {% endfor %}
+      </div>
+      <div class="quiz-fb" id="fb-{{ slide_idx }}"></div>
+      <div id="next-{{ slide_idx }}" style="display:none; margin-top:16px;">
+        {% if not loop.last %}
+          <button class="next-btn" onclick="nextQuestion({{ slide_idx + 1 }})">next question</button>
+        {% else %}
+          <a class="next-btn" href="{{ url_for('teach.view', module_id=module.id) }}">okay now go teach pip</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const startTime = {};
+document.querySelectorAll('.quiz-slide').forEach((slide, i) => { startTime[i] = Date.now(); });
+
+function answerQuestion(btn, slideIndex, optionIndex, correctIndex, explanation) {
+  const slide = document.getElementById('slide-' + slideIndex);
+  const opts = slide.querySelectorAll('.qopt');
+  const responseMs = Date.now() - (startTime[slideIndex] || Date.now());
+
+  opts.forEach(o => { o.disabled = true; o.style.pointerEvents = 'none'; });
+
+  const questionId = parseInt(btn.getAttribute('data-question-id'));
+  const correct = optionIndex === correctIndex;
+
+  btn.classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) opts[correctIndex].classList.add('correct');
+
+  const fb = document.getElementById('fb-' + slideIndex);
+  fb.className = 'quiz-fb show ' + (correct ? 'correct' : 'wrong');
+  fb.textContent = explanation;
+
+  document.getElementById('next-' + slideIndex).style.display = 'block';
+
+  fetch('/api/quiz/answer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question_id: questionId, selected_index: optionIndex, response_time_ms: responseMs })
+  });
+
+  const pip = document.getElementById('qpip-' + slideIndex);
+  if (pip) pip.className = 'qp done';
+}
+
+function nextQuestion(nextIndex) {
+  document.getElementById('slide-' + (nextIndex - 1)).style.display = 'none';
+  document.getElementById('slide-' + nextIndex).style.display = 'block';
+  const pip = document.getElementById('qpip-' + nextIndex);
+  if (pip) pip.className = 'qp cur';
+  startTime[nextIndex] = Date.now();
+}
+</script>
+{% endblock %}

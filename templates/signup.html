@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}join rake - you will actually learn{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>create your account</h1>
+      <p>already in the club? <a href="{{ url_for('auth.login') }}">sign in</a></p>
+    </div>
+    <form method="POST" action="{{ url_for('auth.signup') }}">
+      <div class="field">
+        <label>your name</label>
+        <input type="text" name="name" placeholder="first and last" required autofocus>
+      </div>
+      <div class="field">
+        <label>email address</label>
+        <input type="email" name="email" placeholder="you@school.edu" required>
+      </div>
+      <div class="field">
+        <label>password</label>
+        <input type="password" name="password" placeholder="at least 8 characters pls" required>
+      </div>
+      <button type="submit" class="btn-primary btn-full">let's get it</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

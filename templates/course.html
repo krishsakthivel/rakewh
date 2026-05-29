@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} - rake{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="pg-breadcrumb">
+    <a href="{{ url_for('dashboard.home') }}">my courses</a> / {{ course.title }}
+  </div>
+
+  <div class="course-hero">
+    <div class="ch-label">{{ course.source_filename }}</div>
+    <div class="ch-title">{{ course.title }}</div>
+    <div class="ch-meta">
+      <span class="ch-pill">{{ course.modules | length }} modules</span>
+      <span class="ch-pill">
+        {{ modules_with_status | selectattr('completed') | list | length }} done
+      </span>
+    </div>
+    <div class="ch-progress">
+      <div class="ch-fill" style="width: {{ ((modules_with_status | selectattr('completed') | list | length) / (course.modules | length) * 100) | int }}%"></div>
+    </div>
+  </div>
+
+  <div class="section-label">the modules, in order, no skipping</div>
+  <div class="module-list">
+    {% for item in modules_with_status %}
+    {% set module = item.module %}
+    <a class="mod-row {% if item.completed %}completed{% elif item.in_progress %}active-mod{% elif not item.unlocked %}locked{% endif %}"
+       href="{% if item.unlocked %}{{ url_for('modules.view', module_id=module.id) }}{% else %}#{% endif %}">
+      <div class="mod-left">
+        <div class="mod-n">{{ '%02d' % loop.index }}</div>
+        <div>
+          <div class="mod-title">{{ module.title }}</div>
+          <div class="mod-concepts">{{ module.key_concepts | join(', ') }}</div>
+        </div>
+      </div>
+      <div class="mod-right">
+        <div class="pips">
+          <div class="mpip {% if item.completed %}done{% elif item.in_progress %}cur{% endif %}"></div>
+          <div class="mpip {% if item.completed %}done{% endif %}"></div>
+          <div class="mpip {% if item.completed %}done{% endif %}"></div>
+        </div>
+        <div class="mstatus {% if item.completed %}done{% elif item.in_progress %}cur{% else %}lock{% endif %}">
+          {% if item.completed %}done, get yourself a cookie :)
+          {% elif item.in_progress %}in progress
+          {% else %}locked{% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="share-card">
+    <div class="sc-title">share it with the gc</div>
+    <div class="sc-sub">anyone with the link can enroll. be the one who carries the group chat.</div>
+    <div class="sc-row">
+      <div class="sc-input" id="share-url">{{ request.host_url }}c/{{ course.share_token }}</div>
+      <button class="sc-copy" onclick="copyShare(this)">copy link</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyShare(btn) {
+  const text = document.getElementById('share-url').textContent;
+  navigator.clipboard.writeText(text);
+  btn.textContent = 'copied';
+  setTimeout(() => btn.textContent = 'copy link', 2000);
+}
+</script>
+{% endblock %}

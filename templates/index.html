@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Rake - no cap you will actually learn this{% endblock %}
+
+{% block content %}
+{% if gated %}
+<div class="gate-wrap">
+  <div class="gate-card">
+    <div class="gate-logo">rake<span>.</span></div>
+    <h1>you need the password to get in</h1>
+    <p>this is a closed beta. if you know, you know.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}" style="margin-bottom:16px;">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('auth.index') }}">
+      <div class="field">
+        <input type="password" name="site_password" placeholder="type the password here" required autofocus>
+      </div>
+      <button type="submit" class="btn-primary btn-full">let me in</button>
+    </form>
+  </div>
+</div>
+
+{% else %}
+<div class="hero">
+  <div class="hero-left">
+    <h1>you don't know it until you can <em>explain it</em> to someone who has no idea</h1>
+    <p>drop your notes, rake builds a whole course, then you have to teach Pip a chatbot with zero brain cells until it actually gets it. no cap that is the real test.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="{{ url_for('auth.signup') }}">let's get it</a>
+      <a class="btn-secondary" href="#how">wait how does it work</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-card">
+      <div class="hero-card-label">the run down</div>
+      <h3>notes to mastery, three steps, no skipping</h3>
+      <div class="hc-step">
+        <div class="hc-num">1</div>
+        <div class="hc-text"><strong>drop your PDF</strong>rake reads it and chops it into concept modules like a pro</div>
+      </div>
+      <div class="hc-step">
+        <div class="hc-num">2</div>
+        <div class="hc-text"><strong>read and get quizzed</strong>actual explanations and questions that hit different from your notes</div>
+      </div>
+      <div class="hc-step">
+        <div class="hc-num">3</div>
+        <div class="hc-text"><strong>teach Pip</strong>Pip knows literally nothing. It is BRAINDEAD. if you can make Pip understand it, you understood it.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="upload-band" id="how">
+  <div class="upload-band-inner">
+    <h2>turn your notes into something that actually slaps</h2>
+    <p>lecture notes, textbook chapters, that PDF you have not opened since week one. yes that one.</p>
+    <a class="btn-primary" href="{{ url_for('auth.signup') }}">upload your first PDF fr fr</a>
+  </div>
+</div>
+
+<div class="features">
+  <h2>built different from every other study app</h2>
+  <div class="features-sub">other apps make you feel productive. rake makes you actually be productive. big difference.</div>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-num">Feature 01</div>
+      <h3>prove you know it by teaching it</h3>
+      <p>Pip starts with zero knowledge and will NOT let you off the hook until you have genuinely explained it. no vague answers, no glossing over, Pip will call you out every time.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">Feature 02</div>
+      <h3>questions designed to catch you slipping</h3>
+      <p>old concepts keep sneaking back into your quizzes because the app uses a model to figure out exactly which ones you are about to forget. it knows. it always knows.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">Feature 03</div>
+      <h3>share it with the whole gc</h3>
+      <p>every course gets a link. build the course from your notes, drop the link in the group chat, your entire class can use it. you are the main character now.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">Feature 04</div>
+      <h3>works with whatever you already have</h3>
+      <p>lecture slides, textbook chapters, notes from that one friend who actually pays attention. if it is a PDF, rake will cook with it.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">Feature 05</div>
+      <h3>a hidden scorecard you cannot see</h3>
+      <p>rake builds a secret rubric when it makes your course. at the end of your teach session you find out what you actually covered vs what you thought you covered. it is always humbling.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num">Feature 06</div>
+      <h3>no skipping ahead</h3>
+      <p>modules unlock one at a time. you cannot jump to chapter five if you have not actually understood chapter two. the app will not let you gaslight yourself.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
